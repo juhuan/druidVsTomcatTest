@@ -16,7 +16,10 @@
 package com.example.druidvstomcat;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.fastjson2.JSON;
 import com.mysql.cj.jdbc.Driver;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -36,9 +39,9 @@ public class CaseGetConnectionsBocom {
     private        String jdbcUrl;
     private        String user;
     private        String password;
-    private static int    INIT_SIZE                 = 20;
-    private static int    MIN_SIZE                  = 20;
-    private static int    MAX_SIZE                  = 100;
+    private static int    INIT_SIZE                 = 10;
+    private static int    MIN_SIZE                  = 10;
+    private static int    MAX_SIZE                  = 50;
     private static int    MAX_WAIT                  = 30000;
     private static String VALIDATION_QUERY          = "SELECT 1";
     private static int    VALIDATION_QUERY_TIME_OUT = 1;
@@ -59,8 +62,7 @@ public class CaseGetConnectionsBocom {
         physicalConnStat.set(0);
     }
 
-    @Test
-    public void test_druid_bocom() throws Exception {
+    private DruidDataSource buildDefaultDruidDataSource() {
         DruidDataSource dataSource = new DruidDataSource();
 
         dataSource.setDriverClassName(DRIVER_CLASS);
@@ -84,15 +86,10 @@ public class CaseGetConnectionsBocom {
         dataSource.setTestOnReturn(false);
         dataSource.setTestWhileIdle(true);
         dataSource.setTimeBetweenEvictionRunsMillis(VALIDATION_QUERY_INTERVAL);
-
-        for (int i = 0; i < loopCount; ++i) {
-            p0(dataSource, "druid", threadCount);
-        }
-        System.out.println();
+        return dataSource;
     }
 
-    @Test
-    public void test_tomcat_jdbc_bocom() throws Exception {
+    private org.apache.tomcat.jdbc.pool.DataSource buildDefaultTomcatDataSource() {
         org.apache.tomcat.jdbc.pool.DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
 
         dataSource.setDriverClassName(DRIVER_CLASS);
@@ -118,14 +115,66 @@ public class CaseGetConnectionsBocom {
         dataSource.setFairQueue(true);
         dataSource.setJmxEnabled(false);
         dataSource.setJdbcInterceptors("SlowQueryReport(threhold=500)");
+        return dataSource;
+    }
 
+    @Test
+    public void test_druid_bocom_default() throws Exception {
+
+        DruidDataSource dataSource = buildDefaultDruidDataSource();
+        //System.out.println(ToStringBuilder.reflectionToString(dataSource, ToStringStyle.JSON_STYLE));
+        doGetConnectionTest(dataSource, "druid", threadCount, loopCount);
+    }
+    @Test
+    public void test_druid_bocom_simple() throws Exception {
+
+        DruidDataSource dataSource = buildDefaultDruidDataSource();
+        dataSource.setKeepAlive(false);
+        dataSource.setMaxWait(-1);
+        dataSource.setValidationQueryTimeout(-1);
+        dataSource.setTimeBetweenEvictionRunsMillis(60000);
+        dataSource.setMaxOpenPreparedStatements(10);
+        //System.out.println(ToStringBuilder.reflectionToString(dataSource, ToStringStyle.JSON_STYLE));
+        doGetConnectionTest(dataSource, "druid", threadCount, loopCount);
+    }
+
+    @Test
+    public void test_druid_simple() throws Exception {
+
+        DruidDataSource dataSource = new DruidDataSource();
+
+        dataSource.setInitialSize(INIT_SIZE);
+        dataSource.setMaxActive(MAX_SIZE);
+        dataSource.setMinIdle(MIN_SIZE);
+        //dataSource.setMaxIdle(maxPoolSize);
+        dataSource.setDriverClassName(DRIVER_CLASS);
+        dataSource.setUrl(jdbcUrl);
+        dataSource.setPoolPreparedStatements(true);
+        dataSource.setUsername(user);
+        dataSource.setPassword(password);
+        dataSource.setValidationQuery(VALIDATION_QUERY);
+        dataSource.setTestOnBorrow(false);
+
+        //System.out.println(ToStringBuilder.reflectionToString(dataSource, ToStringStyle.JSON_STYLE));
+
+        doGetConnectionTest(dataSource, "druid", threadCount, loopCount);
+    }
+
+    @Test
+    public void test_tomcat_jdbc_bocom() throws Exception {
+
+        org.apache.tomcat.jdbc.pool.DataSource dataSource = buildDefaultTomcatDataSource();
+        doGetConnectionTest(dataSource, "tomcat-jdbc", threadCount, loopCount);
+    }
+
+    private void doGetConnectionTest(final DataSource dataSource, String name, int threadCount, int loopCount) throws Exception {
         for (int i = 0; i < loopCount; ++i) {
-            p0(dataSource, "tomcat-jdbc", threadCount);
+            doGetConnectionTest(dataSource, name, threadCount);
         }
         System.out.println();
     }
 
-    private void p0(final DataSource dataSource, String name, int threadCount) throws Exception {
+    private void doGetConnectionTest(final DataSource dataSource, String name, int threadCount) throws Exception {
         final CountDownLatch startLatch = new CountDownLatch(1);
         final CountDownLatch endLatch   = new CountDownLatch(threadCount);
         final CountDownLatch dumpLatch  = new CountDownLatch(1);
