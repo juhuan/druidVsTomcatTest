@@ -58,33 +58,7 @@ public class CaseGetConnectionsBocom {
         jdbcUrl = "jdbc:mysql://localhost:3306/mysql";
         physicalConnStat.set(0);
     }
-    @Test
-    public void test_druid() throws Exception {
-        DruidDataSource dataSource = new DruidDataSource();
 
-        dataSource.setDriverClassName(DRIVER_CLASS);
-        dataSource.setUrl(jdbcUrl);
-        dataSource.setUsername(user);
-        dataSource.setPassword(password);
-
-        dataSource.setInitialSize(INIT_SIZE);
-        dataSource.setMaxActive(MAX_SIZE);
-        dataSource.setMinIdle(MIN_SIZE);
-        dataSource.setMaxWait(MAX_WAIT);
-
-        //dataSource.setPoolPreparedStatements(true);
-        //dataSource.setMaxOpenPreparedStatements(20);
-
-        dataSource.setValidationQuery(VALIDATION_QUERY);
-        dataSource.setValidationQueryTimeout(VALIDATION_QUERY_TIME_OUT);
-
-        dataSource.setTestOnBorrow(false);
-
-        for (int i = 0; i < loopCount; ++i) {
-            p0(dataSource, "druid", threadCount);
-        }
-        System.out.println();
-    }
     @Test
     public void test_druid_bocom() throws Exception {
         DruidDataSource dataSource = new DruidDataSource();
