@@ -79,14 +79,22 @@ public class TestUtil {
         }
     }
 
-    public static void doGetConnectionTest(final DataSource dataSource, String name, int threadCount, int loopCount) throws Exception {
+    public static TestConnectionResult doGetConnectionTest(final DataSource dataSource, String name, int threadCount, int loopCount)
+            throws Exception {
+        TestConnectionResult result = new TestConnectionResult();
         for (int i = 0; i < loopCount; ++i) {
-            doGetConnectionTest(dataSource, name, threadCount);
+            TestConnectionResult singleResult = doGetConnectionTest(dataSource, name, threadCount);
+            result.setMillis(result.getMillis() + singleResult.getMillis());
+            result.setYgc(result.getYgc() + singleResult.getYgc());
+            result.setFullGC(result.getFullGC() + singleResult.getFullGC());
+            result.setBlocked(result.getBlocked() + singleResult.getBlocked());
+            result.setWaited(result.getWaited() + singleResult.getWaited());
         }
         System.out.println();
+        return result;
     }
 
-    private static void doGetConnectionTest(final DataSource dataSource, String name, int threadCount) throws Exception {
+    private static TestConnectionResult doGetConnectionTest(final DataSource dataSource, String name, int threadCount) throws Exception {
         final CountDownLatch startLatch = new CountDownLatch(1);
         final CountDownLatch endLatch   = new CountDownLatch(threadCount);
         final CountDownLatch dumpLatch  = new CountDownLatch(1);
@@ -148,5 +156,12 @@ public class TestUtil {
                 + fullGC + " blocked " + NumberFormat.getInstance().format(blockedCount) //
                 + " waited " + NumberFormat.getInstance().format(waitedCount) + " physicalConn " + PHYSICAL_CONN_STAT.get());
 
+        TestConnectionResult result = new TestConnectionResult();
+        result.setMillis(millis);
+        result.setYgc(ygc);
+        result.setFullGC(fullGC);
+        result.setBlocked(blockedCount);
+        result.setWaited(waitedCount);
+        return result;
     }
 }
