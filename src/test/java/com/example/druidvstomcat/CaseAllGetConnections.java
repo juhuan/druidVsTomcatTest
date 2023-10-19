@@ -29,6 +29,7 @@ public class CaseAllGetConnections {
         DruidDataSource dataSource = DataSourceBuilder.defaultDruidDataSource();
         //System.out.println(ToStringBuilder.reflectionToString(dataSource, ToStringStyle.JSON_STYLE));
         TestUtil.doGetConnectionTest(dataSource, "druid", THREAD_COUNT, LOOP_COUNT_X);
+        dataSource.close();
     }
 
     @Test
@@ -36,29 +37,34 @@ public class CaseAllGetConnections {
 
         org.apache.tomcat.jdbc.pool.DataSource dataSource = DataSourceBuilder.defaultTomcatDataSource();
         TestUtil.doGetConnectionTest(dataSource, "tomcat-jdbc", THREAD_COUNT, LOOP_COUNT_X);
+        dataSource.close();
     }
 
     @Test
     public void test_dbcp2() throws Exception {
         final BasicDataSource dataSource = DataSourceBuilder.defaultDbcp2DataSrouce();
         TestUtil.doGetConnectionTest(dataSource, "dbcp2", THREAD_COUNT, LOOP_COUNT_X);
+        dataSource.close();
     }
 
     @Test
     public void test_bonecp() throws Exception {
         BoneCPDataSource dataSource = DataSourceBuilder.defaultBonecpDataSource();
         TestUtil.doGetConnectionTest(dataSource, "boneCP", THREAD_COUNT, LOOP_COUNT_X);
+        dataSource.close();
     }
 
     @Test
     public void test_c3p0() throws Exception {
         ComboPooledDataSource dataSource = DataSourceBuilder.defaultC3p0DataSource();
         TestUtil.doGetConnectionTest(dataSource, "c3p0", THREAD_COUNT, LOOP_COUNT_X);
+        dataSource.close();
     }
 
     @Test
     public void test_HikariCP() throws Exception {
         HikariDataSource dataSource = DataSourceBuilder.defaultHikariDataSource();
         TestUtil.doGetConnectionTest(dataSource, "HikariCP", THREAD_COUNT, LOOP_COUNT_X);
+        dataSource.close();
     }
 }
