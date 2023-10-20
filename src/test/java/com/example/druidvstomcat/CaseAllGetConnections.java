@@ -12,11 +12,9 @@ import org.junit.jupiter.api.TestInstance;
 
 import javax.sql.DataSource;
 import java.sql.DriverManager;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.example.druidvstomcat.TestConfig.THREAD_COUNT;
 import static com.example.druidvstomcat.TestConfig.LOOP_COUNT_X;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,7 +32,7 @@ public class CaseAllGetConnections {
             TestConnectionResult result = TestUtil.doGetConnectionTest(dataSource, dataSourceType, threadCount, LOOP_COUNT_X);
             System.out.printf("thread %2d %12s millis total: %-10d YGC %-10d FGC %-10d blocked %-10d waited %-10d\n", threadCount,
                               dataSourceType, result.getMillis(),
-                              result.getYgc(), result.getFullGC(), result.getBlocked(), result.getWaited());
+                              result.getYgc(), result.getFgc(), result.getBlocked(), result.getWaited());
         }
     }
 

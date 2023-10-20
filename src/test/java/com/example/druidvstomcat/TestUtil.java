@@ -69,11 +69,7 @@ public class TestUtil {
         TestConnectionResult result = new TestConnectionResult();
         for (int i = 0; i < loopCount; ++i) {
             TestConnectionResult singleResult = doGetConnectionTest(dataSource, name, threadCount);
-            result.setMillis(result.getMillis() + singleResult.getMillis());
-            result.setYgc(result.getYgc() + singleResult.getYgc());
-            result.setFullGC(result.getFullGC() + singleResult.getFullGC());
-            result.setBlocked(result.getBlocked() + singleResult.getBlocked());
-            result.setWaited(result.getWaited() + singleResult.getWaited());
+            result.add(singleResult);
         }
         System.out.println();
         return result;
@@ -84,6 +80,28 @@ public class TestUtil {
         final CountDownLatch endLatch   = new CountDownLatch(threadCount);
         final CountDownLatch dumpLatch  = new CountDownLatch(1);
 
+        Thread[] threads = createAndStartThreads(threadCount, startLatch, endLatch, dumpLatch, dataSource);
+
+        long startMillis = System.currentTimeMillis();
+        long startYGC    = TestUtil.getYoungGC();
+        long startFullGC = TestUtil.getFullGC();
+        startLatch.countDown();
+        endLatch.await();
+
+        long blockedCount = calculateBlockedCount(threads);
+        long waitedCount  = calculateWaitedCount(threads);
+        dumpLatch.countDown();
+
+        long millis = System.currentTimeMillis() - startMillis;
+        long ygc    = TestUtil.getYoungGC() - startYGC;
+        long fgc    = TestUtil.getFullGC() - startFullGC;
+
+        printResult(threadCount, name, millis, ygc, fgc, blockedCount, waitedCount);
+        return new TestConnectionResult(millis, ygc, fgc, blockedCount, waitedCount);
+    }
+
+    private static Thread[] createAndStartThreads(int threadCount, CountDownLatch startLatch, CountDownLatch endLatch,
+                                                  CountDownLatch dumpLatch, DataSource dataSource) {
         Thread[] threads = new Thread[threadCount];
         for (int i = 0; i < threadCount; ++i) {
             Thread thread = new Thread() {
@@ -110,43 +128,42 @@ public class TestUtil {
             threads[i] = thread;
             thread.start();
         }
-        long startMillis = System.currentTimeMillis();
-        long startYGC    = TestUtil.getYoungGC();
-        long startFullGC = TestUtil.getFullGC();
-        startLatch.countDown();
-        endLatch.await();
+        return threads;
+    }
 
+    private static ThreadInfo[] getThreadInfoArray(Thread[] threads) {
         long[] threadIdArray = new long[threads.length];
         for (int i = 0; i < threads.length; ++i) {
             threadIdArray[i] = threads[i].getId();
         }
-        ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().getThreadInfo(threadIdArray);
+        return ManagementFactory.getThreadMXBean().getThreadInfo(threadIdArray);
+    }
 
-        dumpLatch.countDown();
-
-        long blockedCount = 0;
-        long waitedCount  = 0;
+    private static long calculateBlockedCount(Thread[] threads) {
+        ThreadInfo[] threadInfoArray = getThreadInfoArray(threads);
+        long         blockedCount    = 0;
         for (int i = 0; i < threadInfoArray.length; ++i) {
             ThreadInfo threadInfo = threadInfoArray[i];
             blockedCount += threadInfo.getBlockedCount();
+        }
+        return blockedCount;
+    }
+
+    private static long calculateWaitedCount(Thread[] threads) {
+        ThreadInfo[] threadInfoArray = getThreadInfoArray(threads);
+        long         waitedCount     = 0;
+        for (int i = 0; i < threadInfoArray.length; ++i) {
+            ThreadInfo threadInfo = threadInfoArray[i];
             waitedCount += threadInfo.getWaitedCount();
         }
+        return waitedCount;
+    }
 
-        long millis = System.currentTimeMillis() - startMillis;
-        long ygc    = TestUtil.getYoungGC() - startYGC;
-        long fullGC = TestUtil.getFullGC() - startFullGC;
-
+    private static void printResult(int threadCount, String name, long millis, long ygc, long fullGC, long blockedCount, long waitedCount) {
         System.out.println(
                 "thread " + threadCount + " " + name + " millis : " + NumberFormat.getInstance().format(millis) + "; YGC " + ygc + " FGC "
                 + fullGC + " blocked " + NumberFormat.getInstance().format(blockedCount) //
                 + " waited " + NumberFormat.getInstance().format(waitedCount) + " physicalConn " + PHYSICAL_CONN_STAT.get());
-
-        TestConnectionResult result = new TestConnectionResult();
-        result.setMillis(millis);
-        result.setYgc(ygc);
-        result.setFullGC(fullGC);
-        result.setBlocked(blockedCount);
-        result.setWaited(waitedCount);
-        return result;
     }
+
 }

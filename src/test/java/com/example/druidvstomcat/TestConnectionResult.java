@@ -1,49 +1,24 @@
 package com.example.druidvstomcat;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TestConnectionResult {
     private long millis  = 0;
     private long ygc     = 0;
-    private long fullGC  = 0;
+    private long fgc     = 0;
     private long blocked = 0;
     private long waited  = 0;
 
-    public long getMillis() {
-        return millis;
-    }
-
-    public void setMillis(long millis) {
-        this.millis = millis;
-    }
-
-    public long getYgc() {
-        return ygc;
-    }
-
-    public void setYgc(long ygc) {
-        this.ygc = ygc;
-    }
-
-    public long getFullGC() {
-        return fullGC;
-    }
-
-    public void setFullGC(long fullGC) {
-        this.fullGC = fullGC;
-    }
-
-    public long getBlocked() {
-        return blocked;
-    }
-
-    public void setBlocked(long blocked) {
-        this.blocked = blocked;
-    }
-
-    public long getWaited() {
-        return waited;
-    }
-
-    public void setWaited(long waited) {
-        this.waited = waited;
+    public void add(TestConnectionResult singleResult) {
+        setMillis(getMillis() + singleResult.getMillis());
+        setYgc(getYgc() + singleResult.getYgc());
+        setFgc(getFgc() + singleResult.getFgc());
+        setBlocked(getBlocked() + singleResult.getBlocked());
+        setWaited(getWaited() + singleResult.getWaited());
     }
 }
