@@ -1,6 +1,4 @@
 <configuration>
-    <root level="INFO">
-        <!-- 日志输出的配置 -->
-    </root>
+    <root level="INFO"/>
     <logger name="com.zaxxer.hikari" level="INFO"/>
 </configuration>
