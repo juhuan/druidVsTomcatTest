@@ -16,6 +16,6 @@ public class TestConfig {
     static       int        VALIDATION_QUERY_INTERVAL = 30000;
     static       int        THREAD_COUNT              = 1;
     static       int        LOOP_COUNT_X              = 10;
-    static final int        LOOP_COUNT_Y              = 1000 * 1 * 1 / THREAD_COUNT;
+    static final int        LOOP_COUNT_Y              = 100000 * 1 * 1 / THREAD_COUNT;
     static       AtomicLong PHYSICAL_CONN_STAT        = new AtomicLong(0);
 }
