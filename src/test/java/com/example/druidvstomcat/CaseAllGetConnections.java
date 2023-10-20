@@ -21,7 +21,7 @@ import static com.example.druidvstomcat.TestConfig.LOOP_COUNT_X;
 public class CaseAllGetConnections {
 
     @BeforeAll
-    private void setUp() throws Exception {
+    public static void setUp() throws Exception {
         DriverManager.registerDriver(new Driver());
     }
 
