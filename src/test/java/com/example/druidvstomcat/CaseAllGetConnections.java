@@ -53,7 +53,7 @@ public class CaseAllGetConnections {
         BasicDataSource dataSource = DataSourceBuilder.defaultDbcp2DataSrouce();
         testDataSource("dbcp2", dataSource);
     }
-
+    @Test
     public void test_bonecp() throws Exception {
         BoneCPDataSource dataSource = DataSourceBuilder.defaultBonecpDataSource();
         testDataSource("boneCP", dataSource);
